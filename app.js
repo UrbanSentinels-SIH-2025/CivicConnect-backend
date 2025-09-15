@@ -1,0 +1,37 @@
+import express from "express";
+import connectDB from "./config/db.js";
+import "./config/passport.js"; // just runs the strategy setup
+import passport from "passport";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
+import authRoutes from "./routes/auth.js";
+
+const app = express();
+
+// 🔹 Connect to MongoDB
+connectDB();
+
+// 🔹 Middleware
+app.use(express.json());
+app.use(cookieParser());
+
+// Allow frontend to call backend
+app.use(
+  cors({
+    origin: "http://localhost:5173", // your React frontend
+    credentials: true, // allow cookies
+  })
+);
+
+// 🔹 Initialize passport
+app.use(passport.initialize());
+
+// 🔹 Routes
+app.use("/auth", authRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+export default app;
