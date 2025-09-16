@@ -4,7 +4,7 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { checkNotLoggedIn } from "../middleware/checkNotLoggedIn.js";
-
+import protect from "../middleware/protect.js";
 const router = express.Router();
 
 /**
@@ -49,7 +49,7 @@ router.get(
     const token = jwt.sign(
       { id: existingUser._id, email: existingUser.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "3h" }
     );
 
     // 4️⃣ Send JWT in HTTP-only cookie
@@ -67,13 +67,13 @@ router.get(
 /**
  * 3️⃣ Get logged-in user details
  */
-router.get("/me", async (req, res) => {
+router.get("/me", protect,async (req, res) => {
+  console.log('kjkj',process.env.CLOUDINARY_API_KEY)
   const token = req.cookies["auth-token"];
   if (!token) return res.status(401).json({ message: "Not logged in" });
-
+   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     // Fetch full user from DB (always latest info)
     const user = await User.findById(decoded.id).select("-__v");
     if (!user) return res.status(404).json({ message: "User not found" });

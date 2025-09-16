@@ -6,7 +6,8 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import authRoutes from "./routes/auth.js";
-
+import reportIssueRoutes from "./routes/reportIssue.js";
+import userIssueRoutes from "./routes/userIssue.js"
 const app = express();
 
 // 🔹 Connect to MongoDB
@@ -29,6 +30,8 @@ app.use(passport.initialize());
 
 // 🔹 Routes
 app.use("/auth", authRoutes);
+app.use("/report-issue", reportIssueRoutes);
+app.use("/user-issue",userIssueRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
