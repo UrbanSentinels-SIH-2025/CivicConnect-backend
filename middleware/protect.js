@@ -7,6 +7,7 @@ const protect = (req, res, next) => {
     if (!token) {
       return res.status(401).json({ message: "Not logged in" });
     }
+    
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -17,7 +18,7 @@ const protect = (req, res, next) => {
 
     // Attach decoded user info to request object
     req.user = decoded;
-    console.log(req.user)
+
 
     // Continue to the next middleware or route handler
     next();

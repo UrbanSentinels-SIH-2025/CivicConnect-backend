@@ -68,7 +68,6 @@ router.get(
  * 3️⃣ Get logged-in user details
  */
 router.get("/me", protect,async (req, res) => {
-  console.log('kjkj',process.env.CLOUDINARY_API_KEY)
   const token = req.cookies["auth-token"];
   if (!token) return res.status(401).json({ message: "Not logged in" });
    
