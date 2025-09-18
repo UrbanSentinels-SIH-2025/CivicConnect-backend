@@ -5,19 +5,25 @@ import dotenv from "dotenv";
 
 dotenv.config(); // Load environment variables from .env file
 
+// Determine callback URL based on environment
+const GOOGLE_CALLBACK_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://civicconnect-backend-hxms.onrender.com/auth/google/callback"
+    : "http://localhost:5000/auth/google/callback";
+
 // ✅ Configure Google OAuth2 strategy
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,      // Google Client ID from console
       clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Google Client Secret
-      callbackURL: "/auth/google/callback",        // Redirect URL after Google login
+      callbackURL: GOOGLE_CALLBACK_URL,           // Use environment-aware callback
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // This function runs AFTER Google verifies the user
-        // 'profile' has user info from Google (id, name, email, picture, etc.)
-        // Normally, you'd save user in DB here
+        // Runs AFTER Google verifies the user
+        // 'profile' contains user info from Google
+        // Normally, save user in DB here
 
         const user = {
           googleId: profile.id,
@@ -26,11 +32,14 @@ passport.use(
           avatar: profile.photos?.[0]?.value,
         };
 
-        // Pass user object forward
-        return done(null, user);
+        return done(null, user); // Pass user object forward
       } catch (err) {
         return done(err, null);
       }
     }
   )
 );
+
+// Optional: serialize/deserialize for sessions if you’re using them
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
