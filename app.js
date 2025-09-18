@@ -19,22 +19,17 @@ app.use(cookieParser());
 
 
 const allowedOrigins = [
-  "http://localhost:5173", // React local dev
-  "https://civicconnecturbansentinels.netlify.app", // Netlify prod
+  "http://localhost:5173",
+  "https://civicconnecturbansentinels.netlify.app",
 ];
 
-// Allow frontend to call backend
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps or curl)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("❌ Not allowed by CORS"));
-      }
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
     },
-    credentials: true, // ✅ allow cookies
+    credentials: true,
   })
 );
 

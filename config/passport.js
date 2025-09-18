@@ -1,38 +1,30 @@
-// config/passport.js
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
-// Determine callback URL based on environment
-const GOOGLE_CALLBACK_URL =
+const CALLBACK_URL =
   process.env.NODE_ENV === "production"
-    ? "https://civicconnect-backend-hxms.onrender.com/auth/google/callback"
+    ? `${process.env.BACKEND_URL}/auth/google/callback`
     : "http://localhost:5000/auth/google/callback";
 
-// ✅ Configure Google OAuth2 strategy
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,      // Google Client ID from console
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Google Client Secret
-      callbackURL: GOOGLE_CALLBACK_URL,           // Use environment-aware callback
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Runs AFTER Google verifies the user
-        // 'profile' contains user info from Google
-        // Normally, save user in DB here
-
         const user = {
           googleId: profile.id,
           name: profile.displayName,
           email: profile.emails?.[0]?.value,
           avatar: profile.photos?.[0]?.value,
         };
-
-        return done(null, user); // Pass user object forward
+        return done(null, user);
       } catch (err) {
         return done(err, null);
       }
@@ -40,6 +32,5 @@ passport.use(
   )
 );
 
-// Optional: serialize/deserialize for sessions if you’re using them
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
