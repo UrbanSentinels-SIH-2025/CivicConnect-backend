@@ -17,11 +17,24 @@ connectDB();
 app.use(express.json());
 app.use(cookieParser());
 
+
+const allowedOrigins = [
+  "http://localhost:5173", // React local dev
+  "https://civicconnecturbansentinels.netlify.app", // Netlify prod
+];
+
 // Allow frontend to call backend
 app.use(
   cors({
-    origin: "http://localhost:5173", // your React frontend
-    credentials: true, // allow cookies
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps or curl)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("❌ Not allowed by CORS"));
+      }
+    },
+    credentials: true, // ✅ allow cookies
   })
 );
 
