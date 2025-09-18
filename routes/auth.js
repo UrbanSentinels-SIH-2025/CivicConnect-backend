@@ -54,10 +54,12 @@ router.get(
 
     // 4️⃣ Send JWT in HTTP-only cookie
     res.cookie("auth-token", token, {
-      httpOnly: true, // cookie not accessible via JS
-      secure: false,  // true in production with HTTPS
-      sameSite: "strict",
-    });
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // ✅ HTTPS only in production
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // ✅ cross-site cookie
+  maxAge: 1000 * 60 * 60 * 3, // 3 hours
+});
+
 
     // 5️⃣ Redirect to frontend dashboard
  // 5️⃣ Redirect to frontend dashboard
