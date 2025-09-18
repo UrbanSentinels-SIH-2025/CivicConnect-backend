@@ -6,8 +6,9 @@ dotenv.config();
 
 const CALLBACK_URL =
   process.env.NODE_ENV === "production"
-    ? `${process.env.BACKEND_URL}/auth/google/callback`
+    ? "https://civicconnect-backend-hxms.onrender.com/auth/google/callback"
     : "http://localhost:5000/auth/google/callback";
+
 
 passport.use(
   new GoogleStrategy(
