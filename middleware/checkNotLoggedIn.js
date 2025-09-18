@@ -8,20 +8,18 @@ export const checkNotLoggedIn = (req, res, next) => {
     try {
       jwt.verify(token, process.env.JWT_SECRET);
 
-      // Determine frontend dashboard URL based on environment
-      const DASHBOARD_URL =
-        process.env.NODE_ENV === "production"
-          ? "https://civicconnecturbansentinels.netlify.app/user/dashboard"
-          : "http://localhost:5173/user/dashboard";
+      // Use FRONTEND_URL env variable
+      const DASHBOARD_URL = (process.env.FRONTEND_URL || "http://localhost:5173") + "/user/dashboard";
 
-      // ✅ User already logged in → redirect to dashboard
       return res.redirect(DASHBOARD_URL);
     } catch (err) {
-      // ❌ Invalid token → clear cookie
-      res.clearCookie("auth-token");
+      res.clearCookie("auth-token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "none",
+      });
     }
   }
 
-  // Not logged in → continue with login flow
   next();
 };
