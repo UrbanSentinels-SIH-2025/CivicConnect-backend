@@ -60,7 +60,10 @@ router.get(
     });
 
     // 5️⃣ Redirect to frontend dashboard
-    res.redirect("http://localhost:5173/user/dashboard");
+ // 5️⃣ Redirect to frontend dashboard
+const DASHBOARD_URL = `${process.env.FRONTEND_URL}/user/dashboard`;
+res.redirect(DASHBOARD_URL);
+
   }
 );
 
