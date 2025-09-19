@@ -39,16 +39,6 @@ router.post("/", protect, upload.single("video"), async (req, res) => {
     // Upload video
     const result = await streamUpload(req.file.buffer);
 
-    // Save issue
-    const issue = new Issues({
-      title,
-      category,
-      videoUrl: result.secure_url,
-      location: { latitude: lat, longitude: lng },
-      createdBy: req.user ? req.user.id : null,
-    });
-    await issue.save();
-
     // Get all users except reporter
     const allUsers = await User.find({ _id: { $ne: req.user.id } });
 
@@ -60,7 +50,9 @@ router.post("/", protect, upload.single("video"), async (req, res) => {
       const dLon = toRadians(lon2 - lon1);
       const a =
         Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2;
+        Math.cos(toRadians(lat1)) *
+          Math.cos(toRadians(lat2)) *
+          Math.sin(dLon / 2) ** 2;
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c; // distance in meters
     };
@@ -71,7 +63,22 @@ router.post("/", protect, upload.single("video"), async (req, res) => {
       return distance(lat, lng, user.location.lat, user.location.lng) <= 500;
     });
 
-    console.log("Nearby users (within 500m):", nearbyUsers);
+    // Collect user IDs (nearby + reporter)
+    const visibleUserIds = [
+      ...nearbyUsers.map(u => u._id),
+      req.user.id, // reporter should always see their issue
+    ];
+
+    // Save issue with visibleTo field
+    const issue = new Issues({
+      title,
+      category,
+      videoUrl: result.secure_url,
+      location: { latitude: lat, longitude: lng },
+      createdBy: req.user ? req.user.id : null,
+      visibleTo: visibleUserIds,
+    });
+    await issue.save();
 
     res.status(201).json({
       message: "Issue reported successfully",
@@ -83,6 +90,7 @@ router.post("/", protect, upload.single("video"), async (req, res) => {
     res.status(500).json({ message: "Report submission failed" });
   }
 });
+
 
 
 

@@ -48,6 +48,25 @@ router.get("/all-issue", async (req, res) => {
   }
 });
 
+
+router.get("/my-issues", protect, async (req, res) => {
+  try {
+    const issues = await Issues.find({
+      visibleTo: req.user.id,          // visible to logged-in user
+      createdBy: { $ne: req.user.id }  // exclude their own issues
+    })
+      .populate("createdBy", "name email picture");
+
+    res.json(issues);
+  } catch (err) {
+    console.error("Error fetching my-issues:", err);
+    res.status(500).json({ message: "Failed to fetch issues" });
+  }
+});
+
+
+
+
 router.patch("/set-location", protect, async (req, res) => {
   try {
     const { lat, lng } = req.body;

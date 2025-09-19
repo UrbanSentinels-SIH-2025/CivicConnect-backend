@@ -41,6 +41,15 @@ const IssueSchema = new mongoose.Schema(
     },
     verifications: { type: Number, default: 0 },
     progress: { type: ProgressSchema, default: () => ({}) },
+
+    // ✅ Users who can see this issue
+    visibleTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
