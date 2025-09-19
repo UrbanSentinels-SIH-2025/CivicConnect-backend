@@ -22,39 +22,56 @@ router.get(
   async (req, res) => {
     const user = req.user;
 
+    // Check if user already exists
     let existingUser = await User.findOne({ googleId: user.googleId });
+    let firstTime = false;
+
     if (!existingUser) {
+      // First-time login → create user with firstTime flag
       existingUser = new User({
         googleId: user.googleId,
         name: user.name,
         email: user.email,
         picture: user.avatar,
+        firstTime: true, // ✅ marks first login
       });
+      firstTime = true;
     } else {
+      // Update user info if changed
       existingUser.name = user.name;
       existingUser.picture = user.avatar;
+
+      // If location not yet set, treat as firstTime
+      firstTime = !existingUser.location?.lat || !existingUser.location?.lng;
     }
+
     await existingUser.save();
 
+    // Generate JWT including firstTime flag
     const token = jwt.sign(
-      { id: existingUser._id, email: existingUser.email },
+      {
+        id: existingUser._id,
+        email: existingUser.email,
+        firstTime, // ✅ sent to frontend
+      },
       process.env.JWT_SECRET,
       { expiresIn: "3h" }
     );
 
-    // ✅ Send cookie (cross-site safe in prod)
+    // Send cookie (cross-site safe in production)
     res.cookie("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      maxAge: 1000 * 60 * 60 * 3,
+      maxAge: 1000 * 60 * 60 * 3, // 3 hours
     });
 
-    // ✅ Redirect to frontend dashboard
+    // Redirect to frontend dashboard
     const DASHBOARD_URL = `${process.env.FRONTEND_URL}/user/dashboard`;
     res.redirect(DASHBOARD_URL);
   }
 );
+
 
 // 3️⃣ Get logged-in user
 router.get("/me", protect, async (req, res) => {

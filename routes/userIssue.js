@@ -2,7 +2,7 @@
 import express from "express";
 import protect from "../middleware/protect.js";
 import Issues from "../models/Issues.js";
-
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -45,6 +45,52 @@ router.get("/all-issue", async (req, res) => {
       success: false,
       message: "Failed to fetch issues",
     });
+  }
+});
+
+router.patch("/set-location", protect, async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
+    if (lat == null || lng == null) {
+      return res.status(400).json({ message: "Latitude and longitude are required" });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.location = { lat, lng };
+    user.firstTime = false; // mark first login as completed
+    await user.save();
+
+    res.json({ message: "Location updated successfully", location: user.location });
+  } catch (err) {
+    console.error("Error updating location:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// Update location after first setup
+router.patch("/update-location", protect, async (req, res) => {
+  console.log(req.body)
+  try {
+    const { lat, lng } = req.body;
+
+    if (lat == null || lng == null) {
+      return res.status(400).json({ message: "Latitude and longitude are required" });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Only update location (do not touch firstTime)
+    user.location = { lat, lng };
+    await user.save();
+
+    res.json({ message: "Location updated successfully", location: user.location });
+  } catch (err) {
+    console.error("Error updating location:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
