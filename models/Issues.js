@@ -33,16 +33,21 @@ const IssueSchema = new mongoose.Schema(
     videoUrl: { type: String, required: true },
     thumbnail: {
       type: String,
-      default: "https://i.imgur.com/7S7qz6g.jpeg", // default thumbnail
+      default: "https://i.imgur.com/7S7qz6g.jpeg",
     },
     location: {
       latitude: { type: Number, required: true },
       longitude: { type: Number, required: true },
     },
-    verifications: { type: Number, default: 0 },
+
+    // ✅ Track real/fake verification counts + user IDs
+    verifications: {
+      real: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      fake: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    },
+
     progress: { type: ProgressSchema, default: () => ({}) },
 
-    // ✅ Users who can see this issue
     visibleTo: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -57,5 +62,7 @@ const IssueSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
 
 export default mongoose.model("Issue", IssueSchema);

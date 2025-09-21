@@ -49,7 +49,7 @@ router.get("/all-issue", async (req, res) => {
 });
 
 
-router.get("/my-issues", protect, async (req, res) => {
+router.get("/other-issues", protect, async (req, res) => {
   try {
     const issues = await Issues.find({
       visibleTo: req.user.id,          // visible to logged-in user
@@ -112,6 +112,58 @@ router.patch("/update-location", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+//Verify Other user Issues
+router.post("/verify-issues", async (req, res) => {
+  try {
+    const { id, type, userId } = req.body; // id = issueId, type = "real"/"fake", userId = verifier
+
+    if (!["real", "fake"].includes(type)) {
+      return res.status(400).json({ error: "Invalid verification type" });
+    }
+
+    const issue = await Issues.findById(id);
+    if (!issue) {
+      return res.status(404).json({ error: "Issue not found" });
+    }
+
+    // ✅ prevent duplicate verification
+    if (
+      issue.verifications.real.includes(userId) ||
+      issue.verifications.fake.includes(userId)
+    ) {
+      return res.status(400).json({ error: "User already verified this issue" });
+    }
+
+    // ✅ add userId to chosen type
+    issue.verifications[type].push(userId);
+
+    // ✅ update verified progress only if real > 5
+    if (issue.verifications.real.length > 5) {
+      issue.progress.verified.completed = true;
+      issue.progress.verified.date = new Date();
+    }
+
+    await issue.save();
+
+    res.status(200).json({
+      message: `Verification recorded as ${type}`,
+      verifications: {
+        real: issue.verifications.real.length,
+        fake: issue.verifications.fake.length,
+      },
+      progress: issue.progress,
+    });
+  } catch (error) {
+    console.error("Error verifying issue:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+
 
 
 export default router;
