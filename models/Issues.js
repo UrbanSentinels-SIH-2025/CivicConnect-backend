@@ -31,6 +31,7 @@ const IssueSchema = new mongoose.Schema(
       enum: ["Road", "Water", "Street", "Electricity", "Sanitation", "Other"],
     },
     videoUrl: { type: String, required: true },
+    
     thumbnail: {
       type: String,
       default: "https://i.imgur.com/7S7qz6g.jpeg",
@@ -39,6 +40,11 @@ const IssueSchema = new mongoose.Schema(
       latitude: { type: Number, required: true },
       longitude: { type: Number, required: true },
     },
+    taskCompleteUrl: { type: String }, // remove required: true
+taskCompletelocation: {
+  latitude: { type: Number },
+  longitude: { type: Number },
+},
 
     // ✅ Track real/fake verification counts + user IDs
     verifications: {

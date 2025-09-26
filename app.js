@@ -8,6 +8,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import reportIssueRoutes from "./routes/reportIssue.js";
 import userIssueRoutes from "./routes/userIssue.js"
+import thumbnailsRoutes from "./routes/thumbnails.js";
 const app = express();
 
 // 🔹 Connect to MongoDB
@@ -40,6 +41,7 @@ app.use(passport.initialize());
 app.use("/auth", authRoutes);
 app.use("/report-issue", reportIssueRoutes);
 app.use("/user-issue",userIssueRoutes);
+app.use("/thumbnails", thumbnailsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
