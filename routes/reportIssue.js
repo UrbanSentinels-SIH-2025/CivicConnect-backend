@@ -71,13 +71,32 @@ router.post("/", protect, upload.single("video"), async (req, res) => {
 
     // Save issue with visibleTo field
     const issue = new Issues({
-      title,
-      category,
-      videoUrl: result.secure_url,
-      location: { latitude: lat, longitude: lng },
-      createdBy: req.user ? req.user.id : null,
-      visibleTo: visibleUserIds,
-    });
+  title,
+  category,
+  videoUrl: result.secure_url,
+  location: { latitude: lat, longitude: lng },
+  createdBy: req.user ? req.user.id : null,
+  visibleTo: visibleUserIds,
+  progress: {
+    reported: {
+      completed: true,
+      date: new Date()
+    },
+    verified: {
+      completed: false,
+      date: null
+    },
+    inProgress: {
+      completed: false,
+      date: null
+    },
+    resolved: {
+      completed: false,
+      date: null
+    }
+  }
+});
+
     await issue.save();
 
     res.status(201).json({
