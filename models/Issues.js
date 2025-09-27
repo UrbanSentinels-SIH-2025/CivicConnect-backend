@@ -47,10 +47,17 @@ taskCompletelocation: {
 },
 
     // ✅ Track real/fake verification counts + user IDs
-    verifications: {
-      real: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-      fake: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    },
+   verifications: {
+  real: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    default: [],
+  },
+  fake: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    default: [],
+  },
+},
+
 
     progress: { type: ProgressSchema, default: () => ({}) },
 

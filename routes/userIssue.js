@@ -244,35 +244,58 @@ router.patch("/update-location", protect, async (req, res) => {
 
 router.post("/verify-issues", protect, async (req, res) => {
   try {
-    const { id, type } = req.body;
+    const { id, type, userId } = req.body;
+    console.log("Verification request:", req.body);
 
     if (!["real", "fake"].includes(type)) {
       return res.status(400).json({ error: "Invalid verification type" });
     }
 
     const issue = await Issues.findById(id);
-    if (!issue) return res.status(404).json({ error: "Issue not found" });
-
-   
-
-    // Prevent duplicate verification
-    const alreadyVerified = issue.verifications.real
-      .concat(issue.verifications.fake)
-      .some(id => id.toString() === req.user.id);
-
-    if (alreadyVerified) {
-      return res.status(400).json({ error: "User already verified this issue" });
+    if (!issue) {
+      return res.status(404).json({ error: "Issue not found" });
     }
 
-    issue.verifications[type].push(req.user.id);
+    // ✅ Ensure arrays exist
+    issue.verifications.real = issue.verifications.real || [];
+    issue.verifications.fake = issue.verifications.fake || [];
 
+    // ✅ Determine verifier userId
+    const verifierId = req.user?._id || userId;
+    if (!verifierId || !mongoose.Types.ObjectId.isValid(verifierId)) {
+      return res.status(400).json({ error: "Invalid or missing user ID" });
+    }
+    const verifierObjectId = new mongoose.Types.ObjectId(verifierId);
+
+    // ✅ Collect all valid verification IDs
+    const allVerifications = [
+      ...issue.verifications.real,
+      ...issue.verifications.fake,
+    ].filter(vId => vId && mongoose.Types.ObjectId.isValid(vId));
+
+    // ✅ Prevent duplicate verification
+    const alreadyVerified = allVerifications.some(
+      vId => vId.toString() === verifierObjectId.toString()
+    );
+
+    if (alreadyVerified) {
+      return res
+        .status(400)
+        .json({ error: "User already verified this issue" });
+    }
+
+    // ✅ Push new verification
+    issue.verifications[type].push(verifierObjectId);
+
+    // ✅ Mark as verified if threshold reached
     const VERIFIED_THRESHOLD = 5;
-    if (issue.verifications.real.length > VERIFIED_THRESHOLD) {
+    if (issue.verifications.real.length >= VERIFIED_THRESHOLD) {
       issue.progress.verified.completed = true;
       issue.progress.verified.date = new Date();
     }
 
     await issue.save();
+    console.log("Updated verifications:", issue.verifications);
 
     res.status(200).json({
       message: `Verification recorded as ${type}`,
