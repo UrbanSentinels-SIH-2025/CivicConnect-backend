@@ -29,7 +29,7 @@ const streamUpload = (fileBuffer) => {
   });
 };
 
-// GET /api/user-issues
+// GET /api/user-issue
 // Returns all issues created by the logged-in user with user details populated
 router.get("/", protect, async (req, res) => {
   try {
@@ -81,6 +81,8 @@ router.get("/all-issue", async (req, res) => {
   }
 });
 
+
+
 router.get("/issue/:id",  async (req, res) => {
   try {
     const issueId = req.params.id;
@@ -102,18 +104,52 @@ router.get("/issue/:id",  async (req, res) => {
 router.get("/other-issues", protect, async (req, res) => {
   try {
     const issues = await Issues.find({
-      visibleTo: req.user.id,            // visible to logged-in user
-      createdBy: { $ne: req.user.id },   // exclude their own issues
-    // not in fake verifications
+      visibleTo: req.user.id,
+      createdBy: { $ne: req.user.id },
     }).populate("createdBy", "name email picture");
 
-    res.json(issues);
-   
+    const userId = req.user.id;
+
+    const totalIssues = issues.length; // total issues count
+
+    // Calculate total verified issues for this user
+    const totalVerified = issues.filter(
+      (issue) =>
+        issue.verifications.real.some((id) => id.equals(userId)) ||
+        issue.verifications.fake.some((id) => id.equals(userId))
+    ).length;
+
+    // Map issues with pending status
+    const issuesWithStatus = issues.map((issue) => {
+      const verifiedByUser = 
+        issue.verifications.real.some((id) => id.equals(userId)) ||
+        issue.verifications.fake.some((id) => id.equals(userId));
+
+      return {
+        ...issue.toObject(),
+        totalVerified,          
+        pending: !verifiedByUser, 
+        total: totalIssues      // add total count here
+      };
+    });
+
+    // Calculate pending count
+    const pendingCount = issuesWithStatus.filter(issue => issue.pending).length;
+
+    res.json({
+      totalIssues,
+      totalVerified,
+      pendingCount,
+      issues: issuesWithStatus,
+    });
   } catch (err) {
     console.error("Error fetching other-issues:", err);
     res.status(500).json({ message: "Failed to fetch issues" });
   }
 });
+
+
+
 
 // access url 
 //user-issues/department-issues/:department
